@@ -87,6 +87,7 @@ ax[2].set_xlabel("Time")
 
 plt.suptitle("Arm probabilites EXP3 vs EXP3S")
 plt.savefig("plots/exp3_arm_probabilities.pdf", bbox_inches="tight")
+plt.savefig("plots/exp3_arm_probabilities.png", bbox_inches="tight")
 plt.clf()
 plt.cla()
 
@@ -99,3 +100,4 @@ plt.ylabel("Regret")
 plt.title("Regret: EXP3 vs EXP3S")
 plt.legend()
 plt.savefig("plots/exp3_regrets.pdf", bbox_inches="tight")
+plt.savefig("plots/exp3_regrets.png", bbox_inches="tight")

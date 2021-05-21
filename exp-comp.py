@@ -27,11 +27,14 @@ noise_std = 0.05
 
 HORIZON = len(arm_rewards[0])
 N_ARMS = len(arm_rewards)
+GAMMA = 0.1
+ALPHA_PLOT = 0.1
 
-exp3s = Exp3S(nbArms=N_ARMS, horizon=HORIZON)
+
+exp3s = Exp3S(nbArms=N_ARMS, horizon=HORIZON, gamma=GAMMA)
 exp3s.startGame()
 
-exp3 = Exp3(nbArms=N_ARMS)
+exp3 = Exp3(nbArms=N_ARMS, gamma=GAMMA)
 exp3.startGame()
 
 
@@ -71,6 +74,15 @@ fig, ax = plt.subplots(3, 1, sharex=True, figsize=(15, 20))
 times = np.arange(HORIZON)
 for arm_idx, weight in enumerate(exp3s_weights):
     ax[0].plot(times, weight, label=f"Arm: {arm_idx}", c=arm_colors[arm_idx], linewidth=4)
+
+xlim = ax[0].get_xlim()
+ylim = ax[0].get_ylim()
+
+for arm_idx, weight in enumerate(exp3_weights):
+    ax[0].plot(times, weight, c=arm_colors[arm_idx], linewidth=4, alpha=ALPHA_PLOT)
+
+ax[0].set_xlim(xlim)
+ax[0].set_ylim(ylim)
 ax[0].legend()
 ax[0].set_ylabel("EXP3S Probabilites per arm")
 
@@ -81,6 +93,16 @@ ax[1].set_ylabel("True Rewards per arm")
 
 for arm_idx, weight in enumerate(exp3_weights):
     ax[2].plot(times, weight, label=f"Arm: {arm_idx}", c=arm_colors[arm_idx], linewidth=4)
+
+xlim = ax[2].get_xlim()
+ylim = ax[2].get_ylim()
+
+for arm_idx, weight in enumerate(exp3s_weights):
+    ax[2].plot(times, weight, c=arm_colors[arm_idx], linewidth=4, alpha=ALPHA_PLOT)
+
+ax[2].set_xlim(xlim)
+ax[2].set_ylim(ylim)
+
 ax[2].legend()
 ax[2].set_ylabel("EXP3 Probabilites per arm")
 ax[2].set_xlabel("Time")

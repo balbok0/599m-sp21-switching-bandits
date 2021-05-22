@@ -29,9 +29,11 @@ noise_std = 0.05
 HORIZON = len(arm_rewards[0])
 N_ARMS = len(arm_rewards)
 
+delta_t = 1
+delta_s = 1
 
-algo = AdSwitchCustom(N_ARMS, horizon=HORIZON, delta_t=9)  # , delta_s=4, delta_t=10
-# algo = AdSwitchNew(N_ARMS, horizon=HORIZON, delta_t=1, delta_s=1)  # , delta_s=4, delta_t=10
+algo = AdSwitchCustom(N_ARMS, horizon=HORIZON, delta_t=delta_t, delta_s=delta_s)  # , delta_s=4, delta_t=10
+# algo = AdSwitchNew(N_ARMS, horizon=HORIZON, delta_t=delta_t, delta_s=delta_s)  # , delta_s=4, delta_t=10
 algo.startGame()
 
 starts = set()

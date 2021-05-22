@@ -1,4 +1,4 @@
-from SMPyBandits.Policies.AdSwitchNew import AdSwitchNew
+from adswitch_custom import AdSwitchCustom, AdSwitchNew
 import numpy as np
 
 from tqdm import trange
@@ -30,7 +30,8 @@ HORIZON = len(arm_rewards[0])
 N_ARMS = len(arm_rewards)
 
 
-algo = AdSwitchNew(N_ARMS, horizon=HORIZON, delta_t=9)  # , delta_s=4, delta_t=10
+algo = AdSwitchCustom(N_ARMS, horizon=HORIZON, delta_t=9)  # , delta_s=4, delta_t=10
+# algo = AdSwitchNew(N_ARMS, horizon=HORIZON, delta_t=1, delta_s=1)  # , delta_s=4, delta_t=10
 algo.startGame()
 
 starts = set()

@@ -5,17 +5,17 @@ from matplotlib import pyplot as plt
 from tqdm import trange
 
 interval = 100
-arm_rewards = {
-    0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
-    1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
-    2: np.hstack((.5 * np.ones(interval), 0.7 * np.ones(interval), 0.3 * np.ones(interval), 0.4 * np.ones(interval))),
-    3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
-}
-
 # arm_rewards = {
-#     0: np.hstack((.7 * np.ones(interval), 0.1 * np.ones(interval), 0.7 * np.ones(interval), 0.1 * np.ones(interval))),
-#     1: np.hstack((.1 * np.ones(interval), 0.7 * np.ones(interval), 0.1 * np.ones(interval), 0.7 * np.ones(interval))),
+#     0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
+#     1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
+#     2: np.hstack((.5 * np.ones(interval), 0.7 * np.ones(interval), 0.3 * np.ones(interval), 0.4 * np.ones(interval))),
+#     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
+
+arm_rewards = {
+    0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
+    1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+}
 arm_colors = {
     0: "mediumseagreen",
     1: "tomato",

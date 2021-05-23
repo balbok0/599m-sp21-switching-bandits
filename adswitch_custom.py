@@ -11,7 +11,7 @@ class AdSwitchCustom(AdSwitchNew):
         self.ns_hist = {}
 
     def check_changes_good_arms(self):
-        return self.check_changes_good_arms_original()
+        return self.check_changes_good_arms_new()
 
     def check_changes_good_arms_new(self):
         """ Check for changes of good arms.
@@ -32,7 +32,7 @@ class AdSwitchCustom(AdSwitchNew):
             right_side = confidence_radius_s1s2 + confidence_radius_st
             # print("AdSwitchNew: should we start a new episode, by checking condition (3), with arm {}, s1 = {}, s2 = {}, s = {} and t = {}...".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
             if abs_difference_in_s1s2_st > right_side:  # check condition 3:
-                print("\n==> New episode was started, with arm {}, s1 = {}, s2 = {}, s = {} and t = {}, as condition (3) is satisfied!".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
+                # print("\n==> New episode was started, with arm {}, s1 = {}, s2 = {}, s = {} and t = {}, as condition (3) is satisfied!".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
                 # print("    n_s1_s2_a =", n_s1_s2_a)  # DEBUG
                 # print("    mu_hat_s1_s2_a =", mu_hat_s1_s2_a)  # DEBUG
                 # print("    n_s_t_a =", n_s_t_a)  # DEBUG
@@ -45,11 +45,25 @@ class AdSwitchCustom(AdSwitchNew):
             else:
                 return False
 
+        if self.t == 1:
+            for good_arm in self.set_GOOD:
+                setting = (good_arm, 0, 0, 0)
+                # Only need to check s = self.t because all previous check were done before
+                if subroutine(*setting):
+                    return True
+
         for good_arm in self.set_GOOD:
-            for s_1 in range(self.start_of_episode, self.t + 1, self.delta_s):  # WARNING we could speed up this loop with their trick
-                for s_2 in range(s_1, self.t + 1, self.delta_s):  # WARNING we could speed up this loop with their trick
+            for s_1 in range(self.start_of_episode, self.t + 1):  # WARNING we could speed up this loop with their trick
+                for s_2 in range(s_1, self.t + 1):  # WARNING we could speed up this loop with their trick
+                    setting = (good_arm, s_1, s_2, self.t)
                     # Only need to check s = self.t because all previous check were done before
-                    if subroutine(good_arm, s_1, s_2, self.t):
+                    if subroutine(*setting):
+                        return True
+
+            for s_1 in range(self.start_of_episode, self.t + 1):  # WARNING we could speed up this loop with their trick
+                for s in range(self.start_of_episode, self.t + 1):  # WARNING we could speed up this loop with their trick
+                    setting = (good_arm, s_1, self.t, s)
+                    if subroutine(*setting):
                         return True
 
         # done for checking on good arms
@@ -80,7 +94,7 @@ class AdSwitchCustom(AdSwitchNew):
                         right_side = confidence_radius_s1s2 + confidence_radius_st
                         # print("AdSwitchNew: should we start a new episode, by checking condition (3), with arm {}, s1 = {}, s2 = {}, s = {} and t = {}...".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
                         if abs_difference_in_s1s2_st > right_side:  # check condition 3:
-                            print("\n==> New episode was started, with arm {}, s1 = {}, s2 = {}, s = {} and t = {}, as condition (3) is satisfied!".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
+                            # print("\n==> New episode was started, with arm {}, s1 = {}, s2 = {}, s = {} and t = {}, as condition (3) is satisfied!".format(good_arm, s_1, s_2, s, self.t))  # DEBUG
                             # print("    n_s1_s2_a =", n_s1_s2_a)  # DEBUG
                             # print("    mu_hat_s1_s2_a =", mu_hat_s1_s2_a)  # DEBUG
                             # print("    n_s_t_a =", n_s_t_a)  # DEBUG

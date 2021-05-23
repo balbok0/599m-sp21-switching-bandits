@@ -1,14 +1,17 @@
 from SMPyBandits.Policies.AdSwitchNew import AdSwitchNew, Constant_C1, DELTA_T, DELTA_S
 import numpy as np
 
+from functools import lru_cache
 
 class AdSwitchCustom(AdSwitchNew):
     def __init__(self, nbArms, horizon=None, C1=Constant_C1, delta_s=DELTA_S, delta_t=DELTA_T, *args, **kwargs):
         super().__init__(nbArms, horizon=horizon, C1=C1, delta_s=delta_s, delta_t=delta_t, *args, **kwargs)
         self.checked_good_arm_settings = set()
+        self.mus_hist = {}
+        self.ns_hist = {}
 
     def check_changes_good_arms(self):
-        return self.check_changes_good_arms_new()
+        return self.check_changes_good_arms_original()
 
     def check_changes_good_arms_new(self):
         """ Check for changes of good arms.
@@ -89,3 +92,26 @@ class AdSwitchCustom(AdSwitchNew):
                             return True
         # done for checking on good arms
         return False
+
+    def check_changes_good_arms_original(self):
+        return super().check_changes_good_arms()
+
+    def mu_hat_s_t(self, arm, s, t):
+        # Cache - Not using lru_cache because it caches `self`, which can lead to undesirable results.
+        setting = (arm, s, t)
+        if setting in self.mus_hist:
+            return self.mus_hist[setting]
+
+        result = super().mu_hat_s_t(arm, s, t)
+        self.mus_hist[setting] = result
+        return result
+
+    def n_s_t(self, arm, s, t):
+        # Cache
+        setting = (arm, s, t)
+        if setting in self.ns_hist:
+            return self.ns_hist[setting]
+
+        result = super().n_s_t(arm, s, t)
+        self.ns_hist[setting] = result
+        return result

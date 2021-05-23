@@ -1,8 +1,10 @@
 from adswitch_custom import AdSwitchCustom, AdSwitchNew
 import numpy as np
+from typing import Set
 
 from tqdm import trange
 from matplotlib import pyplot as plt
+from collections import defaultdict
 
 # Setup
 interval = 100
@@ -12,9 +14,17 @@ interval = 100
 #     2: np.hstack((.5 * np.ones(interval), 0.7 * np.ones(interval), 0.3 * np.ones(interval), 0.4 * np.ones(interval))),
 #     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
+# arm_rewards = {
+#     0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
+#     1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+# }
+
+# FIXME: Small rewards just for debugging
+debug_interval = 40
+max_val = 3
 arm_rewards = {
-    0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
-    1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+    0: np.hstack((max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval),)),
+    1: np.hstack((.1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval),)),
 }
 
 arm_colors = {
@@ -37,6 +47,8 @@ algo = AdSwitchCustom(N_ARMS, horizon=HORIZON, delta_t=delta_t, delta_s=delta_s)
 algo.startGame()
 
 starts = set()
+bad_arms: Set[int] = set()
+bad_arm_add_hist = defaultdict(list)
 
 arm_choices = np.zeros(HORIZON)
 seen_rewards = np.zeros(HORIZON)
@@ -55,6 +67,11 @@ for t in trange(HORIZON):
     if algo.set_S:
         S_sets[t] = algo.set_S.copy()
 
+    bad_arms_t = set(range(N_ARMS)).difference(algo.set_GOOD)
+    for arm in bad_arms_t.difference(bad_arms):
+        bad_arm_add_hist[arm].append(t)
+    bad_arms = bad_arms_t
+
     arm_choices[t] = arm_idx
     seen_rewards[t] = reward_at_idx
 
@@ -64,9 +81,20 @@ for arm_idx in arm_rewards.keys():
     means_to_t = np.cumsum(seen_rewards * (arm_choices == arm_idx)) / np.cumsum(arm_choices == arm_idx)
     ax[0].plot(np.arange(HORIZON), means_to_t, c=arm_colors[arm_idx], label=f"Arm: {arm_idx}", linewidth=4)
 
+print(starts)
 starts.remove(0)
 if starts:
-    ax[0].axvline(list(starts), color="black", linestyle="dotted", label="Episode starts", linewidth=4)
+    starts = np.sort(list(starts))
+    for it, start in enumerate(starts):
+        if it == 0:
+            ax[0].axvline(start, color="black", linestyle="dotted", label="Episode starts", linewidth=4)
+        else:
+            ax[0].axvline(start, color="black", linestyle="dotted", linewidth=4)
+
+if bad_arm_add_hist:
+    for arm, ts in bad_arm_add_hist.items():
+        for t in ts:
+            ax[0].axvline(t, color=arm_colors[arm], linestyle="dotted", linewidth=4)
 
 ax[0].legend()
 ax[0].set_ylabel("Empirical mean of arm")

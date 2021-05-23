@@ -3,16 +3,11 @@ import numpy as np
 
 from tqdm import trange
 from matplotlib import pyplot as plt
+import yaml
 
 
 # Helper function for getting means out of SW UCB
 def get_means(algo, nbArms):
-    arms, idxs, counts = np.unique(algo.last_choices, return_index=True, return_counts=True)
-    print(f"Arms: {arms}")
-    print(f"Idxs: {idxs}")
-    arms_to_idxs = dict(zip(arms, idxs))
-    print(f"Arm to idx dict: {arms_to_idxs}")
-
     result = np.zeros(nbArms)
     for arm in range(nbArms):
         last_pulls_of_this_arm = np.count_nonzero(algo.last_choices == arm)
@@ -24,8 +19,12 @@ def get_means(algo, nbArms):
     return result
 
 
-# Setup
-interval = 100
+with open("variables.yaml") as f:
+    d = yaml.safe_load(f)
+    interval = d["interval"]
+    max_val = d["max_val"]
+    min_val = d["min_val"]
+
 # arm_rewards = {
 #     0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
 #     1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
@@ -33,8 +32,8 @@ interval = 100
 #     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
 arm_rewards = {
-    0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
-    1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+    0: np.hstack((max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval),)),
+    1: np.hstack((min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval),)),
 }
 
 arm_colors = {
@@ -58,6 +57,8 @@ arm_choices = np.zeros(HORIZON)
 seen_rewards = np.zeros(HORIZON)
 arm_means = np.zeros((N_ARMS, HORIZON))
 ucbs = np.zeros((N_ARMS, HORIZON))
+regret_sum = 0
+regret = np.zeros(HORIZON)
 
 for t in trange(HORIZON):
     noises = np.random.normal(0.0, scale=noise_std, size=N_ARMS)
@@ -73,7 +74,8 @@ for t in trange(HORIZON):
 
     arm_means[:, t] = get_means(algo, N_ARMS)
     ucbs[:, t] = algo.index
-
+    regret_sum += max(*[arm_rewards[k][t] for k in arm_rewards.keys()]) - reward_at_idx
+    regret[t] = regret_sum
 
 _, ax = plt.subplots(2, 1, figsize=(10, 14), sharex=True)
 for arm_idx in arm_rewards.keys():
@@ -92,3 +94,16 @@ ax[1].set_xlabel("Time")
 plt.suptitle("Sliding Window UCB Algorithm Estimated Arm means")
 plt.savefig("plots/ucb_sliding_arms.png", bbox_inches="tight")
 plt.savefig("plots/ucb_sliding_arms.pdf", bbox_inches="tight")
+plt.clf()
+plt.cla()
+
+# Plot regret
+np.save("logs/ucb_sliding_window_regret.npy", regret)
+fig = plt.figure(figsize=(10, 10))
+plt.plot(np.arange(HORIZON), regret, label="UCB SW", linewidth=4)
+plt.xlabel("Time")
+plt.ylabel("Regret")
+plt.title("UCB SW Regret")
+plt.legend()
+plt.savefig("plots/ucb_sliding_window_regrets.pdf", bbox_inches="tight")
+plt.savefig("plots/adswitch_regrets.png", bbox_inches="tight")

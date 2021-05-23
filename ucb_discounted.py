@@ -3,9 +3,14 @@ import numpy as np
 
 from tqdm import trange
 from matplotlib import pyplot as plt
+import yaml
 
-# Setup
-interval = 100
+with open("variables.yaml") as f:
+    d = yaml.safe_load(f)
+    interval = d["interval"]
+    max_val = d["max_val"]
+    min_val = d["min_val"]
+
 # arm_rewards = {
 #     0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
 #     1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
@@ -13,8 +18,8 @@ interval = 100
 #     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
 arm_rewards = {
-    0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
-    1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+    0: np.hstack((max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval),)),
+    1: np.hstack((min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval),)),
 }
 
 arm_colors = {
@@ -38,6 +43,8 @@ arm_choices = np.zeros(HORIZON)
 seen_rewards = np.zeros(HORIZON)
 arm_means = np.zeros((N_ARMS, HORIZON))
 ucbs = np.zeros((N_ARMS, HORIZON))
+regret_sum = 0
+regret = np.zeros(HORIZON)
 
 for t in trange(HORIZON):
     noises = np.random.normal(0.0, scale=noise_std, size=N_ARMS)
@@ -53,6 +60,8 @@ for t in trange(HORIZON):
     arm_means[:, t] = algo.discounted_rewards / algo.discounted_pulls
     ucbs[:, t] = algo.index
 
+    regret_sum += max(*[arm_rewards[k][t] for k in arm_rewards.keys()]) - reward_at_idx
+    regret[t] = regret_sum
 
 _, ax = plt.subplots(2, 1, figsize=(10, 14), sharex=True)
 for arm_idx in arm_rewards.keys():
@@ -71,3 +80,16 @@ ax[1].set_xlabel("Time")
 plt.suptitle("Discounted UCB Algorithm Estimated Arm means")
 plt.savefig("plots/ucb_discount_arms.png", bbox_inches="tight")
 plt.savefig("plots/ucb_discount_arms.pdf", bbox_inches="tight")
+plt.clf()
+plt.cla()
+
+# Plot regret
+np.save("logs/ucb_discounted_regret.npy", regret)
+fig = plt.figure(figsize=(10, 10))
+plt.plot(np.arange(HORIZON), regret, label="Discounted UCB", linewidth=4)
+plt.xlabel("Time")
+plt.ylabel("Regret")
+plt.title("Discounted UCB Regret")
+plt.legend()
+plt.savefig("plots/ucb_discounted_regrets.pdf", bbox_inches="tight")
+plt.savefig("plots/ucb_discounted_regrets.png", bbox_inches="tight")

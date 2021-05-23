@@ -3,18 +3,23 @@ from SMPyBandits.Policies.Exp3 import Exp3
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import trange
+import yaml
 
-interval = 100
+with open("variables.yaml") as f:
+    d = yaml.safe_load(f)
+    interval = d["interval"]
+    max_val = d["max_val"]
+    min_val = d["min_val"]
+
 # arm_rewards = {
 #     0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
 #     1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
 #     2: np.hstack((.5 * np.ones(interval), 0.7 * np.ones(interval), 0.3 * np.ones(interval), 0.4 * np.ones(interval))),
 #     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
-
 arm_rewards = {
-    0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
-    1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
+    0: np.hstack((max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval),)),
+    1: np.hstack((min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval),)),
 }
 arm_colors = {
     0: "mediumseagreen",
@@ -114,6 +119,8 @@ plt.clf()
 plt.cla()
 
 # Plot regret
+np.save("logs/exp3_regret.npy", exp3_regret)
+np.save("logs/exp3s_regret.npy", exp3s_regret)
 fig = plt.figure(figsize=(10, 10))
 plt.plot(times, exp3_regret, label="EXP3", linewidth=4)
 plt.plot(times, exp3s_regret, label="EXP3.S", linewidth=4)

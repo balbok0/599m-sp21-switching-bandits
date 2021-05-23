@@ -5,26 +5,25 @@ from typing import Set
 from tqdm import trange
 from matplotlib import pyplot as plt
 from collections import defaultdict
+import yaml
+
+with open("variables.yaml") as f:
+    d = yaml.safe_load(f)
+    interval = d["interval"]
+    max_val = d["max_val"]
+    min_val = d["min_val"]
+
 
 # Setup
-interval = 100
 # arm_rewards = {
 #     0: np.hstack((.7 * np.ones(interval), 0.3 * np.ones(interval), 0.5 * np.ones(interval), 0.3 * np.ones(interval))),
 #     1: np.hstack((.3 * np.ones(interval), 0.3 * np.ones(interval), 0.6 * np.ones(interval), 0.7 * np.ones(interval))),
 #     2: np.hstack((.5 * np.ones(interval), 0.7 * np.ones(interval), 0.3 * np.ones(interval), 0.4 * np.ones(interval))),
 #     3: np.hstack((.1 * np.ones(interval), 0.1 * np.ones(interval), 1.0 * np.ones(interval), 0.1 * np.ones(interval))),
 # }
-# arm_rewards = {
-#     0: np.hstack((.9 * np.ones(2 * interval), .1 * np.ones(2 * interval))),
-#     1: np.hstack((.1 * np.ones(2 * interval), .9 * np.ones(2 * interval))),
-# }
-
-# FIXME: Small rewards just for debugging
-debug_interval = 40
-max_val = 3
 arm_rewards = {
-    0: np.hstack((max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval),)),
-    1: np.hstack((.1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval), .1 * np.ones(debug_interval), max_val * np.ones(debug_interval),)),
+    0: np.hstack((max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval),)),
+    1: np.hstack((min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval), min_val * np.ones(interval), max_val * np.ones(interval),)),
 }
 
 arm_colors = {
@@ -54,6 +53,9 @@ arm_choices = np.zeros(HORIZON)
 seen_rewards = np.zeros(HORIZON)
 S_sets = {}
 
+regret_sum = 0
+regret = np.zeros(HORIZON)
+
 for t in trange(HORIZON):
     noises = np.random.normal(0.0, scale=noise_std, size=N_ARMS)
 
@@ -74,6 +76,9 @@ for t in trange(HORIZON):
 
     arm_choices[t] = arm_idx
     seen_rewards[t] = reward_at_idx
+
+    regret_sum += max(*[arm_rewards[k][t] for k in arm_rewards.keys()]) - reward_at_idx
+    regret[t] = regret_sum
 
 
 _, ax = plt.subplots(2, 1, figsize=(10, 14), sharex=True)
@@ -108,3 +113,16 @@ ax[1].set_xlabel("Time")
 plt.suptitle("AdSwitch Algorithm Estimated Arm means")
 plt.savefig("plots/adswitch_arms.png", bbox_inches="tight")
 plt.savefig("plots/adswitch_arms.pdf", bbox_inches="tight")
+plt.clf()
+plt.cla()
+
+# Plot regret
+np.save("logs/adswitch_regret.npy", regret)
+fig = plt.figure(figsize=(10, 10))
+plt.plot(np.arange(HORIZON), regret, label="AdSwitch", linewidth=4)
+plt.xlabel("Time")
+plt.ylabel("Regret")
+plt.title("AdSwitch Regret")
+plt.legend()
+plt.savefig("plots/adswitch_regrets.pdf", bbox_inches="tight")
+plt.savefig("plots/adswitch_regrets.png", bbox_inches="tight")
